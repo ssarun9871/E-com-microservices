@@ -22,7 +22,12 @@ const Product = db.define('Product', {
   stock: {
       type: Sequelize.INTEGER,
       allowNull: false
-  }
+  },
+  version: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    defaultValue: 0,
+  },
 });
 
 module.exports = Product;

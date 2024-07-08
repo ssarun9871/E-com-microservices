@@ -65,21 +65,75 @@ exports.updateProduct = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { name, price, stock } = req.body;
+    const { name, price, stock, version } = req.body;
 
     const [updatedRows] = await Product.update(
-      { name, price, stock },
-      { where: { product_id: id, vendor_id: user_id } }
+      { name, price, stock, version: version + 1 },
+      {
+        where: {
+          product_id: id,
+          vendor_id: user_id,
+          version: version,
+        },
+      }
     );
 
     if (updatedRows === 0) {
-      return res.status(404).json({
-        message:
-          "Product not found or you do not have access to update this product",
+      return res.status(409).json({
+        message: "Product not found or version conflict. Please try again.",
       });
     }
 
     res.status(200).json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
+exports.updateProductStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.user;
+
+    if (role !== "customer") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { quantity, version } = req.body;
+
+    const product = await Product.findOne({
+      where: {
+        product_id: id,
+        version: version,
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const updatedStock = product.stock - quantity;
+
+    const [updatedRows] = await Product.update(
+      { stock: updatedStock, version: version + 1 },
+      {
+        where: {
+          product_id: id,
+          version: version,
+        },
+      }
+    );
+
+    if (updatedRows === 0) {
+      return res.status(409).json({
+        message: "Product not found or version conflict. Please try again.",
+      });
+    }
+
+    res.status(200).json({ message: "Product stock updated successfully" });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

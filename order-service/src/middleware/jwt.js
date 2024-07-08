@@ -9,7 +9,9 @@ const verifyToken = (req, res, next) => {
       }
       
       const payload = jwt.verify(token, process.env.JWT_SECRET);
+
       req.user = payload; 
+      req.token = token;
       next();
     } catch (err) {
       if (err.name === 'JsonWebTokenError') {

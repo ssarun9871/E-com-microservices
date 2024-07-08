@@ -9,36 +9,52 @@ exports.createOrder = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { product_id, quantity, status } = req.body;
+    const { version, product_id, quantity, status } = req.body;
 
-    const unique_order_id = new ShortUniqueId({
-      dictionary: "number",
+    const uid = new ShortUniqueId({
+      dictionary: 'number',
       length: 10,
     });
 
-    const order_id = unique_order_id();
-    let vendor_id;
+    const order_id = uid.rnd();
 
-    let config = {
+    const config = {
       method: "get",
-      maxBodyLength: Infinity,
-      url: `localhost:3002/products/${product_id}`,
+      url: `http://localhost:3002/products/${product_id}`,
+      headers: {
+        Authorization: `Bearer ${req.token}`,
+      },
     };
 
-    axios
-      .request(config)
-      .then((response) => {
-        console.log(JSON.stringify(response.data));
-        vendor_id = response.data.vendor_id;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    const response = await axios.request(config);
+    const product = response.data;
+    const { vendor_id, stock } = product;
+
+    if (stock < quantity) {
+      return res.status(400).json({ message: "Insufficient stock" });
+    }
+
+    const updateConfig = {
+      method: "put",
+      url: `http://localhost:3002/products/stock/${product_id}`,
+      headers: {
+        Authorization: `Bearer ${req.token}`,
+      },
+      data: { quantity, version },
+    };
+
+    const updateResponse = await axios.request(updateConfig);
+
+    if (!updateResponse.status == 200) {
+      return res
+        .status(409)
+        .json({ message: "Stock update failed due to concurrency conflict" });
+    }
 
     const order = await Order.create({
       order_id,
       customer_id: user_id,
-      vendor_id: vendor_id,
+      vendor_id,
       product_id,
       quantity,
       status,
@@ -73,10 +89,9 @@ exports.getOrderByOrderId = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.status(200).json({ order: order });
+    res.status(200).json({ order });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
