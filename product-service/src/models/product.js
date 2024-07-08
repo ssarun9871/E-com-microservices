@@ -7,7 +7,7 @@ const Product = db.define('Product', {
     primaryKey: true,
     autoIncrement: true,
   },
-  user_id:{
+  vendor_id:{
     type: Sequelize.INTEGER,
     allowNull: false
   },

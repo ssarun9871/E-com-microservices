@@ -4,7 +4,8 @@ const verifyToken = require('../middleware/jwt');
 const router = express.Router();
 
 router.post('/',verifyToken, productController.createProduct);
-router.get('/', verifyToken, productController.getProducts);
+router.get('/', verifyToken, productController.getAllProducts);
+router.get('/:id', productController.getProductById);
 router.put('/:id', verifyToken, productController.updateProduct);
 router.delete('/:id', verifyToken, productController.deleteProduct);
 

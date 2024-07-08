@@ -11,7 +11,11 @@ const Order = db.define("Order", {
     type: Sequelize.INTEGER,
     allowNull: false,
   },
-  user_id:{
+  customer_id:{
+    type:Sequelize.INTEGER,
+    allowNull:false
+  },
+  vendor_id:{
     type:Sequelize.INTEGER,
     allowNull:false
   },
@@ -24,7 +28,13 @@ const Order = db.define("Order", {
     allowNull: false,
   },
   status: {
-    type: Sequelize.STRING,
+    type: Sequelize.ENUM(
+      "pending",
+      "cancelled",
+      "refunded",
+      "completed"
+    ),
+    defaultValue:"pending",
     allowNull: false,
   },
 });

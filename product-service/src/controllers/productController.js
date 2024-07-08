@@ -8,7 +8,7 @@ exports.createProduct = async (req, res) => {
     }
 
     const { name, price, stock } = req.body;
-    const product = await Product.create({ user_id, name, price, stock });
+    const product = await Product.create({ vendor_id: user_id, name, price, stock });
     res.status(201).json({ message: "Product created", product });
   } catch (err) {
     console.error(err);
@@ -17,7 +17,22 @@ exports.createProduct = async (req, res) => {
 };
 
 
-exports.getProducts = async (req, res) => {
+exports.getProductById = async (req, res) => {
+  try {
+    const {id} = req.params;
+
+    const products = await Product.findOne({
+      where: {product_id:id},
+    });
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getAllProducts = async (req, res) => {
   try {
     const { role, user_id } = req.user;
     if (role !== "vendor" && role !== "customer") {
@@ -27,7 +42,7 @@ exports.getProducts = async (req, res) => {
     let condition = {};
 
     if (role === "vendor") {
-      condition.user_id = user_id;
+      condition.vendor_id = user_id;
     }
 
     const products = await Product.findAll({
@@ -54,7 +69,7 @@ exports.updateProduct = async (req, res) => {
 
     const [updatedRows] = await Product.update(
       { name, price, stock },
-      { where: { product_id: id, user_id: user_id } }
+      { where: { product_id: id, vendor_id: user_id } }
     );
 
     if (updatedRows === 0) {
@@ -81,7 +96,7 @@ exports.deleteProduct = async (req, res) => {
     }
 
     const deletedRows = await Product.destroy({
-      where: { product_id: id, user_id: user_id },
+      where: { product_id: id, vendor_id: user_id },
     });
 
     if (deletedRows === 0) {

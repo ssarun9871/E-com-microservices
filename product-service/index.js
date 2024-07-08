@@ -18,7 +18,7 @@ app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
 
-db.sync({alter:true})
+db.sync()
   .then(() => {
     app.listen(PORT, () => {
       console.log("Product service running on port : " + PORT);
