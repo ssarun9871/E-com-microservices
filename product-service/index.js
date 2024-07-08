@@ -3,7 +3,7 @@ require('dotenv').config();
 const app = express();
 const productRoutes = require("./src/routes/productRoutes");
 const db = require("./src/database/connection");
-const PORT = process.env.PORT || 3000; // Provide a default port
+const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -18,7 +18,7 @@ app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
 
-db.sync()
+db.sync({alter:true})
   .then(() => {
     app.listen(PORT, () => {
       console.log("Product service running on port : " + PORT);

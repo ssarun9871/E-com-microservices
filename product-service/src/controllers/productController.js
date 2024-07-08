@@ -1,19 +1,39 @@
-const Product = require('../models/product');
+const Product = require("../models/product");
 
 exports.createProduct = async (req, res) => {
   try {
+    const { role, user_id } = req.user;
+    if (role !== "vendor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const { name, price, stock } = req.body;
-    const product = await Product.create({ name, price, stock });
-    res.status(201).json({ message: 'Product created', product });
-  } catch (error) {
-    console.error(error);
+    const product = await Product.create({ user_id, name, price, stock });
+    res.status(201).json({ message: "Product created", product });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
+
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.findAll();
+    const { role, user_id } = req.user;
+    if (role !== "vendor" && role !== "customer") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    let condition = {};
+
+    if (role === "vendor") {
+      condition.user_id = user_id;
+    }
+
+    const products = await Product.findAll({
+      where: condition,
+    });
+
     res.status(200).json(products);
   } catch (error) {
     console.error(error);
@@ -24,11 +44,29 @@ exports.getProducts = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    const { role, user_id } = req.user;
+
+    if (role !== "vendor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
     const { name, price, stock } = req.body;
-    await Product.update({ name, price, stock }, { where: { id } });
-    res.status(200).json({ message: 'Product updated' });
-  } catch (error) {
-    console.error(error);
+
+    const [updatedRows] = await Product.update(
+      { name, price, stock },
+      { where: { product_id: id, user_id: user_id } }
+    );
+
+    if (updatedRows === 0) {
+      return res.status(404).json({
+        message:
+          "Product not found or you do not have access to update this product",
+      });
+    }
+
+    res.status(200).json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -36,11 +74,26 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    await Product.destroy({ where: { id } });
-    res.status(200).json({ message: 'Product deleted' });
-  } catch (error) {
-    console.error(error);
+    const { role, user_id } = req.user;
+
+    if (role !== "vendor") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const deletedRows = await Product.destroy({
+      where: { product_id: id, user_id: user_id },
+    });
+
+    if (deletedRows === 0) {
+      return res.status(404).json({
+        message:
+          "Product not found or you do not have access to delete this product",
+      });
+    }
+
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-

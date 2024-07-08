@@ -1,19 +1,19 @@
 const express = require("express");
-require('dotenv').config()
+require('dotenv').config();
 const app = express();
-const authRoutes = require("./src/routes/authRoutes");
+const orderRoutes = require("./src/routes/orderRoutes");
 const db = require("./src/database/connection");
 const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/auth", authRoutes);
+app.use("/orders", orderRoutes);
 
 app.get('/', (req, res) => {
-  res.status(200).send("Welcome to User service");
+  res.status(200).send("Welcome to the Order Service");
 });
 
-app.use((err, req, res,next) => {
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Internal Server Error');
 });
@@ -21,7 +21,7 @@ app.use((err, req, res,next) => {
 db.sync()
   .then(() => {
     app.listen(PORT, () => {
-      console.log("User service running on port : " + PORT);
+      console.log("Order service running on port : " + PORT);
     });
   })
   .catch((error) => {

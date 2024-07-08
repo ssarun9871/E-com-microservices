@@ -2,10 +2,14 @@ const Sequelize = require("sequelize");
 const db = require("../database/connection");
 
 const Product = db.define('Product', {
-  user_id: {
+  product_id: {
     type: Sequelize.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+  },
+  user_id:{
+    type: Sequelize.INTEGER,
+    allowNull: false
   },
   name: {
       type: Sequelize.STRING,
